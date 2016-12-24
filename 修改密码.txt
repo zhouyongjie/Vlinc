@@ -1,0 +1,61 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.*;
+
+public class ChangePassword extends JFrame implements ActionListener {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    public static final int width = 250;
+    public static final int height = 150;
+    JTextField text1;
+    JTextField text2;
+    JLabel la1;
+    JPanel la11;
+    JLabel la2;
+    JPanel la22;
+    JButton jbn;
+    ChangePassword(){
+        setTitle("hello");
+        setSize(width, height);
+        setLayout(new FlowLayout());
+        text1=new JPasswordField(15);
+        text2=new JPasswordField(15);
+        la11=new JPanel();
+        la22=new JPanel();
+        la1=new JLabel("输新密码:");
+        la2=new JLabel("确认密码:");
+        jbn=new JButton("修改密码");
+        la11.add(la1);
+        la11.add(text1);
+        la22.add(la2);
+        la22.add(text2);
+        add(la11);
+        add(la22);
+        
+        add(jbn);
+        jbn.addActionListener(this);
+    }
+
+public void actionPerformed(ActionEvent e) {
+        // TODO Auto-generated method stub
+        if(e.getSource()==jbn){
+            if(text1.getText().equals(text2.getText())){
+                JOptionPane.showMessageDialog(null, "修改成功", "提示", JOptionPane.INFORMATION_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(null, "两次输入不相同", "提示", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        
+    }
+    
+    public static void main(String[] args ){
+    	ChangePassword changetitle=new ChangePassword();
+        changetitle.setVisible(true);
+        changetitle.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+}
