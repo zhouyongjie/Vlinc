@@ -1,45 +1,119 @@
-import java.io.*;
-import java.net.*;
+package Vlinc;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.BindException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+//import javax.swing.AbstractButton;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+//import Vlinc.Vlinc_Server.Alistener;
 
 public class Vlinc_Server {
-	public static void main(String argsp[]){
+
+    static DataInputStream dataInputStream = null;
+    DataOutputStream dataOutputStream = null;
+	static JTextField inputField = new JTextField();
+	static JTextArea outputArea = new JTextArea();
+    public static void main(String[] args) {
+    	new Vlinc_Server().launch();
+    }
+    public void launch(){
+        // 是否成功启动服务端
+        boolean isStart = false;
+        // 服务端socket
+        ServerSocket ss = null;
+        // 客户端socket
+        Socket socket = null;
+
+		JFrame frm = new JFrame();
+		frm.setTitle("Vlinc聊天窗口");
+		frm.setDefaultCloseOperation(3);
+		JButton myBtn = new JButton("发送");
+		JPanel bottomPanel = new JPanel();
+		JPanel topPanel = new JPanel();
+		inputField.setEditable(true);										//输入可编辑
+		inputField.setHorizontalAlignment(SwingConstants.LEFT);				//输入靠左
+		inputField.setColumns(40);											//输入框最多40字符
+		outputArea.setRows(30);												//输出框30行
+		outputArea.setColumns(50);											//输出框50列
+		outputArea.setEditable(false);										//输出框不可编辑
+		frm.getContentPane().add(topPanel, BorderLayout.CENTER);			//输出框居中
+		frm.getContentPane().add(bottomPanel, BorderLayout.SOUTH);			//输入框居底部
+		topPanel.add(outputArea);
+		bottomPanel.add(inputField);
+		bottomPanel.add(myBtn);
+		frm.setBounds(400, 200, 600, 600);
+		inputField.addActionListener(new Alistener());
+		frm.setVisible(true);
+        try {
+            // 启动服务器
+            ss = new ServerSocket(6060);
+        } catch (BindException e) {
+            System.out.println("端口已在使用中");
+            // 关闭程序
+            System.exit(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            isStart = true;
+            while (isStart) {
+                boolean isConnect = false;
+                // 启动监听
+                socket = ss.accept();
+                System.out.println("one client connect");
+                isConnect = true;
+                while (isConnect) {
+                    // 获取客户端输入流
+                    dataInputStream = new DataInputStream(
+                            socket.getInputStream());
+                    // 读取客户端传递的数据
+                    String message = dataInputStream.readUTF();
+                    outputArea.append(message + "\n"); 
+                }
+
+            }
+        } catch (EOFException e) {
+            System.out.println("client closed!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭相关资源
+            try {
+                dataInputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    public class Alistener implements ActionListener{
+    	public void actionPerformed(ActionEvent e){
+			String str = inputField.getText().trim();
+			outputArea.append(str + "\n");
+			inputField.setText("");
+			sendMessage(str);
+		}
+    }
+    public void sendMessage(String str){
 		try{
-			ServerSocket server = null;
-			try{
-				server = new ServerSocket(6060);                        //创建ServerSocket监听6060端口
-			}catch (Exception e){
-				System.out.println("Error:" + e);
-				System.exit(-1);
-			}
-			Socket client = null;
-			try{
-				client = server.accept();
-			}
-			catch(Exception e){
-				System.out.println("连接失败，请检查你的网络连接！");
-				System.exit(-1);
-			}
-			String inputString;
-			BufferedReader is = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			PrintWriter os = new PrintWriter(client.getOutputStream());
-			//由Socket对象得到输入输出流，构造相应的的BufferedReader和PrintWriter对象
-			BufferedReader sin = new BufferedReader(new InputStreamReader(System.in));
-			System.out.println("对方说：" + is.readLine());
-			inputString = sin.readLine();                                //从标准输入读入信息
-			while(inputString != null && !inputString.trim().equals("quit chat")){
-				os.println(inputString);								 //将信息传至客户端
-				os.flush();												 //刷新输出流，使客户端及时得到信息
-				System.out.println("我说：" + inputString);
-				System.out.println("对方说：" + is.readLine());			 //在屏幕上显示发送和接收的消息
-				inputString = sin.readLine();							 //读入新的消息
-			}
-			os.close();	
-			is.close();
-			client.close();
-			server.close();												 //关闭Socket输入输出流及Socket，ServerSocket
-			System.out.println("聊天结束！");
-		}catch(Exception e){
-			System.out.println("Error:" + e);
-		}	
+			dataOutputStream.writeUTF(str);
+			dataOutputStream.flush();
+		}catch(IOException e1){
+			e1.printStackTrace();
+		}
 	}
 }
